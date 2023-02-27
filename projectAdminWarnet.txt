@@ -1,0 +1,737 @@
+package baru;
+
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
+import java.util.Scanner;
+import java.util.StringJoiner;
+import java.util.StringTokenizer;
+
+public class Baru {
+
+    public static void main(String[] args) throws IOException {
+
+        Scanner input = new Scanner(System.in);
+
+        boolean ulang = true;
+
+        while (ulang) {
+            System.out.println("\n|-----------------------------|");
+            System.out.println("|        WARNET GLOBAL        |");
+            System.out.println("|-----------------------------|");
+            System.out.println("| 1.Daftar jadi user          |");
+            System.out.println("| 2.Menyewa warnet            |");
+            System.out.println("| 3.Melihat data user         |");
+            System.out.println("| 4.Mencari data user         |");
+            System.out.println("|-----------------------------|");
+
+            System.out.print("\nPilihan : ");
+            String pilih = input.next();
+
+            switch (pilih) {
+                case "1":
+                    //Daftar menjadi user
+                    System.out.println("\n+-------------------+");
+                    System.out.println("| Selamat mendaftar |");
+                    System.out.println("+-------------------+");
+                    daftar();
+                    break;
+                case "2":
+                    //Menyewa warnet
+                    sewaWarnet();
+                    break;
+                case "3":
+                    melihatSeluruhUser();
+                    break;
+                case "4":
+                    //Mencari data user
+                    System.out.println("\n+-------------------+");
+                    System.out.println("| Mencari data user |");
+                    System.out.println("+-------------------+");
+                    MencariDataUser();
+                    break;
+                default:
+                    System.err.println("\nInput tidak di kenali!!!");
+                    break;
+            }
+
+            ulang = getYesOrNO("Apakah anda ingin melanjudkan");
+
+        }
+
+    }
+
+    private static void daftar() throws IOException {
+
+        //Object
+        Identitas identitas = new Identitas();
+        Scanner input = new Scanner(System.in);
+
+        FileWriter writer;
+        BufferedWriter bufer = null;
+
+        try {
+            writer = new FileWriter("DataUserWarnet.txt", true);
+            bufer = new BufferedWriter(writer);
+        } catch (IOException e) {
+            System.err.println("Database tidak di temukan");
+        }
+
+        //Mengambil input dari user
+        System.out.print("Masukan nama     : ");
+        String nama = cekNama();
+        System.out.print("Masukan password : ");
+        String password = cekPassword_danId(true);
+        System.out.print("Masukan NoTlp    : ");
+        String noTlp = cekNoTlp();
+
+        //Memanggil kelas random untuk mengambil nilai random
+        Random random = new Random();
+        int uniq = random.nextInt(999) + 1;
+
+        //Memotong namaUpper dengan spasinya
+        String[] split = nama.split("\\s+");
+        String id = split[0] + "0" + uniq;
+
+        //Menjadikan inputan user milik object Identitas
+        identitas.setId(id);
+        identitas.seNama(nama);
+        identitas.setPassword(password);
+        identitas.seNoTlp(noTlp);
+
+        boolean cek_Id = cek(id, false);
+
+        if (!cek_Id) {
+            //Menampilkan hasil inputan
+            System.out.println("\nData yang anda masukan adalah : ");
+            System.out.println("---------------------------------");
+            System.out.println("ID         : " + identitas.getId());
+            System.out.println("Nama       : " + identitas.getNama());
+            System.out.println("Password   : " + identitas.getPassword());
+            System.out.println("Nomor HP   : " + identitas.getNoTlp());
+
+            boolean simpan = getYesOrNO("Apakah anda yakin ingin mendaftar");
+
+            if (simpan) {
+                bufer.write(identitas.getId() + "," + identitas.getNama() + "," + identitas.getPassword() + "," + identitas.getNoTlp());
+                bufer.newLine();
+                bufer.flush();
+                System.out.println("\nTerimakasih...\n");
+
+                sewaWarnet();
+
+            } else {
+                System.out.println("\nTerimakasih...");
+            }
+        } else {
+            System.out.println("\nID ( " + identitas.getId() + " ) telah tersedia sebagai berikut : ");
+            cek(id, true);
+        }
+
+    }
+
+    private static void sewaWarnet() throws IOException {
+
+        Identitas identitas = new Identitas();
+        Scanner input = new Scanner(System.in);
+
+        boolean mengulang = true;
+
+        while (mengulang) {
+
+            System.out.println("\n|-----------------------------|");
+            System.out.println("|        WARNET GLOBAL        |");
+            System.out.println("|-----------------------------|");
+
+            System.out.print("Masukan ID       : ");
+            String id = cekPassword_danId(false);
+            System.out.print("Masukan password : ");
+            String password = cekPassword_danId(true);
+
+            //Menjadikan inputan user milik object Identitas
+            identitas.setId(id);
+            identitas.setPassword(password);
+
+            String[] periksa = {id, password};
+
+            boolean cekIdentitas = cek(periksa);
+
+            if (cekIdentitas) {
+
+                System.out.println("\n|-----------------------------|");
+                System.out.println("|        WARNET GLOBAL        |");
+                System.out.println("|-----------------------------|");
+                System.out.println("| 1.Paket 20 menit 2k         |");
+                System.out.println("| 2.Paket 40 menit 4k         |");
+                System.out.println("| 3.Paket 1 jam 5k            |");
+                System.out.println("| 4.Paket 2 jam 8k            |");
+                System.out.println("| 5.Paket 3 jam 10k           |");
+                System.out.println("| 6.Paket 4 jam 13k           |");
+                System.out.println("| 7.Paket 5 jam 15k           |");
+                System.out.println("|-----------------------------|");
+
+                int paket = 0, total = 0, kembalian = 0, bayar = 0;//1,paket2,paket3,paket4,paket5,paket6,paket7;
+                String pilihan_Paket = null;
+
+                System.out.print("pilih : ");
+                String pilih = cekPilihWarnet();
+
+                switch (pilih) {
+                    case "1":
+                        pilihan_Paket = "Paket 20 menit 2k";
+                        paket = 2000;
+                        break;
+                    case "2":
+                        pilihan_Paket = "Paket 40 menit 4k";
+                        paket = 4000;
+                        break;
+                    case "3":
+                        pilihan_Paket = "Paket 1 jam 5k";
+                        paket = 5000;
+                        break;
+                    case "4":
+                        pilihan_Paket = "Paket 2 jam 8k";
+                        paket = 8000;
+                        break;
+                    case "5":
+                        pilihan_Paket = "Paket 3 jam 10k";
+                        paket = 10000;
+                        break;
+                    case "6":
+                        pilihan_Paket = "Paket 4 jam 13k";
+                        paket = 13000;
+                        break;
+                    case "7":
+                        pilihan_Paket = "Paket 5 jam 15k";
+                        paket = 15000;
+                        break;
+                    default:
+                        System.err.println("Input tidak di kenali");
+                        break;
+                }
+
+                String nama_User = mengambilNama(id);
+
+                boolean makan = getYesOrNO("Apakah anda ingin membeli makanan dan minuman");
+
+                if (makan) {
+
+                    int makananMinuman = 0, jumblah = 0, totalAkhir = paket;
+                    String pilihan_makanan = null;
+                    List<String> tampilan = new ArrayList<>();
+
+                    List<String> list = new ArrayList<>(14);
+                    list.add("Mie + telur");
+                    list.add("Mie + telur + nasi");
+                    list.add("Mie + nasi");
+                    list.add("Mie");
+                    list.add("Telur");
+                    list.add("aqua botol");
+                    list.add("teh dingin");
+                    list.add("teh hangat");
+                    list.add("es jeruk");
+                    list.add("Teh susu");
+                    list.add("Susu hangat");
+                    list.add("Teh sisri");
+                    list.add("Aqua gelas");
+                    list.add("Teh botol sosro");
+
+                    boolean memilih_MakananDanMinuman = true;
+
+                    while (memilih_MakananDanMinuman) {
+
+                        System.out.println("\n|----------------------------------------------------------|");
+                        System.out.println("|                   Makananan dan minuman                  |");
+                        System.out.println("|----------------------------------------------------------|");
+                        System.out.println("| 1.Paket Mie + telur 8k         | 8.Minuman teh hangat 4k |");
+                        System.out.println("| 2.Paket Mie + telur + nasi 12k | 9.Minuman es jeruk 4k   |");
+                        System.out.println("| 3.Paket Mie + nasi 8k          | 10.Teh susu 5k          |");
+                        System.out.println("| 4.Mie saja 5k                  | 11.Susu hangat 4k       |");
+                        System.out.println("| 5.Telur saja 3                 | 12.Teh sisri 3k         |");
+                        System.out.println("| 6.Minuman aqua botol 5 k       | 13.Aqua gelas 1k        |");
+                        System.out.println("| 7.Minuman teh dingin 4k        | 14.Teh botol sosro 7k   |");
+                        System.out.println("|----------------------------------------------------------|");
+
+                        System.out.print("Pilih   : ");
+                        String pilih2 = cekPilihMakanan();
+
+                        switch (pilih2) {
+                            case "1":
+                                pilihan_makanan = list.get(0);
+                                makananMinuman = 8000;
+                                break;
+                            case "2":
+                                pilihan_makanan = list.get(1);
+                                makananMinuman = 12000;
+                                break;
+                            case "3":
+                                pilihan_makanan = list.get(2);
+                                makananMinuman = 8000;
+                                break;
+                            case "4":
+                                pilihan_makanan = list.get(3);
+                                makananMinuman = 5000;
+                                break;
+                            case "5":
+                                pilihan_makanan = list.get(4);
+                                makananMinuman = 3000;
+                                break;
+                            case "6":
+                                pilihan_makanan = list.get(5);
+                                makananMinuman = 5000;
+                                break;
+                            case "7":
+                                pilihan_makanan = list.get(6);
+                                makananMinuman = 4000;
+                                break;
+                            case "8":
+                                pilihan_makanan = list.get(7);
+                                makananMinuman = 4000;
+                                break;
+                            case "9":
+                                pilihan_makanan = list.get(8);
+                                makananMinuman = 4000;
+                                break;
+                            case "10":
+                                pilihan_makanan = list.get(9);
+                                makananMinuman = 5000;
+                                break;
+                            case "11":
+                                pilihan_makanan = list.get(10);
+                                makananMinuman = 4000;
+                                break;
+                            case "12":
+                                pilihan_makanan = list.get(11);
+                                makananMinuman = 3000;
+                                break;
+                            case "13":
+                                pilihan_makanan = list.get(12);
+                                makananMinuman = 1000;
+                                break;
+                            case "14":
+                                pilihan_makanan = list.get(13);
+                                makananMinuman = 7000;
+                                break;
+                            default:
+                                System.err.println("Input tidak di kenali");
+                                break;
+                        }
+
+                        tampilan.add(pilihan_makanan);
+
+                        System.out.print("Jumblah : ");
+                        jumblah = input.nextInt();
+
+                        total = makananMinuman * jumblah;
+                        totalAkhir = totalAkhir + total;
+
+                        memilih_MakananDanMinuman = getYesOrNO("Apakah anda ingin membeli lagi");
+
+                        if (!memilih_MakananDanMinuman) {
+                            memilih_MakananDanMinuman = false;
+                        }
+
+                        //Akhir while
+                    }
+
+                    //Total harga
+                    System.out.println("\nTotal   : " + totalAkhir + "\n");
+
+                    System.out.print("Bayar   : ");
+                    bayar = input.nextInt();
+
+                    if (bayar >= totalAkhir) {
+                        kembalian = bayar - totalAkhir;
+                        System.out.println("\n------------------------------------------------------");
+                        System.out.println("                    WARNET GLOBAL                     ");
+                        System.out.println("------------------------------------------------------");
+                        System.out.println("Nama pelanggan                : " + nama_User);
+                        System.out.println("Penyewaan warnet              : " + pilihan_Paket);
+                        System.out.println("Pesanan makanan dan minuman   : " + forEachList(tampilan));
+                        System.out.println("Total pesanan                 : Rp." + totalAkhir);
+                        System.out.println("Nominal bayar                 : Rp." + bayar);
+                        System.out.println("Kembalian                     : Rp." + kembalian);
+                        System.out.println("------------------------------------------------------");
+
+                    } else {
+                        System.err.println("\nMaaf uang anda tidak cukup");
+                    }
+
+                } else {
+
+                    total = paket;
+                    System.out.println("\nTotal  : " + total + "\n");
+
+                    System.out.print("Bayar   : ");
+                    bayar = input.nextInt();
+
+                    if (bayar >= total) {
+                        kembalian = bayar - total;
+                        System.out.println("\n------------------------------------------------------");
+                        System.out.println("                    WARNET GLOBAL                     ");
+                        System.out.println("------------------------------------------------------");
+                        System.out.println("Nama pelanggan              : " + nama_User);
+                        System.out.println("Penyewaan warnet            : " + pilihan_Paket);
+                        System.out.println("Total pesanan               : RP." + total);
+                        System.out.println("Nominal bayar               : RP." + bayar);
+                        System.out.println("Kembalian                   : RP." + kembalian);
+                        System.out.println("------------------------------------------------------");
+
+                    } else {
+                        System.err.println("\nMaaf uang anda tidak cukup");
+                    }
+
+                }
+
+                mengulang = false;
+
+            } else {
+                System.err.println("\nMaaf data user anda tidak di temukan\nMungkin anda belum mendaftar atau salah memasukan inputan");
+
+                boolean ingin_Daftar = getYesOrNO("Apakah anda ingin mendaftar");
+
+                if (ingin_Daftar) {
+                    System.out.println("\nSelamat mendaftar....\n");
+                    daftar();
+                    mengulang = false;
+                }
+
+            }
+
+        }
+
+    }
+
+    private static void MencariDataUser() throws IOException {
+
+        Scanner input = new Scanner(System.in);
+
+        boolean ulangCari = true;
+
+        while (ulangCari) {
+
+            System.out.print("\nSearch : ");
+            String cari = input.nextLine();
+            
+            cek(cari, true);
+            
+            ulangCari = getYesOrNO("Apakah anda ingin mencari lagi");
+
+            if (!ulangCari) {
+                ulangCari = false;
+            }
+
+        }
+    }
+
+    private static void melihatSeluruhUser() throws IOException {
+
+        FileReader reder;
+        BufferedReader bufer = null;
+
+        try {
+            reder = new FileReader("DataUserWarnet.txt");
+            bufer = new BufferedReader(reder);
+        } catch (IOException e) {
+            System.err.println("Database tidak di temukan");
+        }
+        String data = bufer.readLine();
+
+        int nomor = 0;
+        
+        System.out.println("\n----------------------------------------------------------------------------------------------------------------------------");
+        System.out.println("| NO |\tID               |\tNama                   |\tJenis kelamin                |\tNomor telephone         |");
+        System.out.println("----------------------------------------------------------------------------------------------------------------------------");
+
+        while (data != null) {
+            nomor++;
+            StringTokenizer token = new StringTokenizer(data, ",");
+            System.out.printf("| %s  ", nomor);
+            System.out.printf("|    %-15s", token.nextToken());
+            System.out.printf("|\t%-23s", token.nextToken());
+            System.out.printf("|\t%-29s", token.nextToken());
+            System.out.printf("|\t%-28s", token.nextToken());
+            System.out.print("\n");
+
+            data = bufer.readLine();
+        }
+
+        System.out.println("----------------------------------------------------------------------------------------------------------------------------");
+
+    }
+
+    private static String mengambilNama(String id) throws IOException {
+
+        FileReader reder;
+        BufferedReader bufer = null;
+
+        try {
+            reder = new FileReader("DataUserWarnet.txt");
+            bufer = new BufferedReader(reder);
+        } catch (IOException e) {
+            System.err.println("Database tidak di temukan");
+        }
+        String data = bufer.readLine();
+
+        String nama_User = null;
+        boolean cek = false;
+
+        while (data != null) {
+
+            cek = true;
+
+            StringTokenizer token = new StringTokenizer(data, ",");
+
+            for (int i = 0; i < token.countTokens(); i++) {
+                cek = cek && data.contains(id);
+            }
+
+            if (cek) {
+                token.nextToken();
+                nama_User = token.nextToken();
+            }
+
+            data = bufer.readLine();
+        }
+
+        return nama_User;
+
+    }
+
+    private static boolean cek(String[] periksa) throws IOException {
+
+        FileReader reder;
+        BufferedReader bufer = null;
+
+        try {
+            reder = new FileReader("DataUserWarnet.txt");
+            bufer = new BufferedReader(reder);
+        } catch (IOException e) {
+            System.err.println("Database tidak di temukan");
+        }
+
+        String data = bufer.readLine();
+
+        boolean cek = false;
+
+        while (data != null) {
+
+            cek = true;
+
+            for (String str : periksa) {
+                cek = cek && data.toLowerCase().contains(str.toLowerCase());
+            }
+
+            if (cek) {
+                break;
+            }
+
+            data = bufer.readLine();
+        }
+
+        return cek;
+    }
+
+    private static boolean cek(String str, boolean bln) throws IOException {
+
+        FileReader reder;
+        BufferedReader bufer = null;
+
+        try {
+            reder = new FileReader("DataUserWarnet.txt");
+            bufer = new BufferedReader(reder);
+        } catch (IOException e) {
+            System.err.println("Database tidak di temukan");
+        }
+
+        String data = bufer.readLine();
+        if (bln) {
+
+            System.out.println("-----------------------------------------------------------------------------------------------------------------");
+            System.out.println("|\tID     |\tNama                   |\tJenis kelamin                |\tNomor telephone         |");
+            System.out.println("-----------------------------------------------------------------------------------------------------------------");
+
+        }
+
+        boolean cek = false;
+
+        while (data != null) {
+
+            cek = true;
+
+            for (int i = 0; i < data.length(); i++) {
+                cek = cek && data.toLowerCase().contains(str.toLowerCase());
+            }
+
+            if (cek) {
+                if (bln) {
+                    StringTokenizer token = new StringTokenizer(data, ",");
+                    System.out.printf("|    %-10s", token.nextToken());
+                    System.out.printf("|\t%-23s", token.nextToken());
+                    System.out.printf("|\t%-29s", token.nextToken());
+                    System.out.printf("|\t%-28s", token.nextToken());
+                    System.out.print("\n");
+                } else {
+                    break;
+                }
+            }
+
+            data = bufer.readLine();
+        }
+
+        if (bln) {
+            System.out.println("-----------------------------------------------------------------------------------------------------------------");
+
+        }
+
+        return cek;
+
+    }
+
+    private static StringJoiner forEachList(List<String> list) {
+
+        StringJoiner join = new StringJoiner(" & ", "", "");
+        list.forEach(join::add);
+
+        return join;
+
+    }
+
+    private static String cekPilihMakanan() {
+
+        Scanner input = new Scanner(System.in);
+        String pilih = input.nextLine();
+
+        while (!pilih.equalsIgnoreCase("1") && !pilih.equalsIgnoreCase("2") && !pilih.equalsIgnoreCase("3") && !pilih.equalsIgnoreCase("4") && !pilih.equalsIgnoreCase("5") && !pilih.equalsIgnoreCase("6") && !pilih.equalsIgnoreCase("7") && !pilih.equalsIgnoreCase("8") && !pilih.equalsIgnoreCase("9") && !pilih.equalsIgnoreCase("10") && !pilih.equalsIgnoreCase("11") && !pilih.equalsIgnoreCase("12") && !pilih.equalsIgnoreCase("13") && !pilih.equalsIgnoreCase("14")) {
+            System.err.println("Input tidak di kenali");
+            System.out.print("\nPilih   : ");
+            pilih = input.nextLine();
+        }
+
+        return pilih;
+    }
+
+    private static String cekPilihWarnet() {
+
+        Scanner input = new Scanner(System.in);
+        String pilih = input.nextLine();
+
+        while (!pilih.equalsIgnoreCase("1") && !pilih.equalsIgnoreCase("2") && !pilih.equalsIgnoreCase("3") && !pilih.equalsIgnoreCase("4") && !pilih.equalsIgnoreCase("5") && !pilih.equalsIgnoreCase("6") && !pilih.equalsIgnoreCase("7")) {
+            System.err.println("Input tidak di kenali");
+            System.out.print("\nPilih   : ");
+            pilih = input.nextLine();
+        }
+
+        return pilih;
+    }
+
+    private static String cekNama() {
+
+        Scanner input = new Scanner(System.in);
+        String nama = input.nextLine();
+
+        while (nama.isBlank() || nama.length() < 8) {
+            System.err.println("Wajib mengisi nama dan minimal 8 karakter");
+            System.out.print("\nMasukan nama     : ");
+            nama = input.nextLine();
+        }
+
+        //Membuat huruf pertama dari field nama menjadi kapital 
+        String namaUpper = nama.substring(0, 1).toUpperCase() + nama.substring(1);
+
+        return namaUpper;
+
+    }
+
+    private static String cekNoTlp() {
+
+        Scanner input = new Scanner(System.in);
+        String noTlp = input.nextLine();
+
+        while (!noTlp.matches("[0-9]+") || noTlp.length() < 11 || noTlp.length() > 12) {
+            System.err.println("Nomor telphone tidak valit");
+            System.out.print("Masukan NoTlp    : ");
+            noTlp = input.nextLine();
+        }
+
+        return noTlp;
+    }
+
+    private static String cekPassword_danId(boolean pasword) {
+
+        Scanner input = new Scanner(System.in);
+        String password = input.nextLine();
+
+        boolean passwordStrong = false;
+
+        while (!passwordStrong) {
+            if (pasword) {
+                if (password.length() < 8) {
+                    System.err.println("Password minimal 8 karakter");
+                    System.out.print("Masukan password : ");
+                    password = input.nextLine();
+                    continue;
+                }
+            } else {
+
+            }
+
+            boolean isUpper = false;
+            boolean isDigit = false;
+
+            for (char c : password.toCharArray()) {
+                if (Character.isUpperCase(c)) {
+                    isUpper = true;
+                } else if (Character.isDigit(c)) {
+                    isDigit = true;
+                }
+
+                if (isDigit && isUpper) {
+                    passwordStrong = true;
+                    break;
+                }
+            }
+
+            if (pasword) {
+                if (!passwordStrong) {
+                    System.err.println("minimal memiliki 1 huruf kapital dan 1 digit nomor");
+                    System.out.print("Masukan password : ");
+                    password = input.nextLine();
+                }
+            } else {
+                if (!passwordStrong) {
+                    System.err.println("minimal memiliki 1 huruf kapital dan 1 digit nomor");
+                    System.out.print("Masukan ID       : ");
+                    password = input.nextLine();
+                }
+
+            }
+
+        }
+
+        return password;
+    }
+
+    private static boolean getYesOrNO(String mesage) {
+
+        Scanner input = new Scanner(System.in);
+
+        System.out.print("\n" + mesage + "(Y/N) : ");
+        String data = input.nextLine();
+
+        while (!data.equalsIgnoreCase("y") && !data.equalsIgnoreCase("n")) {
+            System.err.println("Input tidak di kenali");
+            System.out.print("\n" + mesage + "(Y/N) : ");
+            data = input.nextLine();
+        }
+
+        return data.equalsIgnoreCase("y");
+
+    }
+
+}

@@ -1,0 +1,44 @@
+package baru;
+
+public class Identitas {
+    
+    String id;
+    private String nama;
+    private String noTlp;
+    private String password;
+    
+    public String getId(){
+        return this.id;
+    }
+    
+    public String getNama(){
+        return this.nama;
+    }
+    
+    public String getNoTlp(){
+        return this.noTlp;
+    }
+    
+    public String getPassword(){
+        return this.password;
+    }
+    
+    public void setId(String id){
+        this.id = id;
+    }
+    
+    public void seNama(String nama){
+        this.nama = nama;
+    }
+    
+    public void seNoTlp(String noTlp){
+        this.noTlp = noTlp;
+    }
+    
+    public void setPassword(String password){
+        this.password = password;
+    }
+    
+    
+    
+}
